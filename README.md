@@ -1,4 +1,4 @@
-# shinychatgpt - ChatGPT Clone with Shiny
+# ChatGPT Clone with Shiny on R
 
 ### The OpenAI Playground - ChatGPT Clone with Shiny application is built using the R programming language and the Shiny framework. 
 

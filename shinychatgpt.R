@@ -7,13 +7,13 @@ library(R6)
 # 可以再增加private属性
 ChatGPT <- R6Class("ChatGPT",
                    public = list(
-                     api_key = "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",
+                     api_key = "",
                      model_name = 'gpt-3.5-turbo',
-                     temperature = 0.5,
+                     temperature = 0.7,
                      max_length = 512,
                      sysprompt = '',
                      prompt = '',
-
+                     
                      # Initialize
                      initialize = function(data) {
                        self$api_key <- data$api_key
@@ -56,7 +56,7 @@ ui <- fluidPage(
     sidebarPanel(
       h3("Welcome to the OpenAI Playground - ChatGPT Clone with Shiny!"),
       p("This application allows you to chat with an OpenAI GPT model and explore its capabilities. Simply use your own API keys with adding below."),
-      textInput("api_key", "API Key", placeholder = "Plz enter the API key here"),
+      textInput("api_key", "API Key", "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"),
       tags$p("Find your own OpenAI API:",
              tags$a(href = "https://platform.openai.com/account/api-keys",
                     target="_blank", "https://platform.openai.com/account/api-keys")
@@ -129,8 +129,12 @@ server <- function(input, output, session) {
 
       # 获取gpt的返回
       gpt_res = gpt$call_gpt_api()
-      print(gpt_res)
-      if (!is.null(gpt_res)) {#gpt返回时模型或是key错误，需要加判断加提示窗口，写成一个advanced函数
+      print('User:', gpt$prompt)
+      print('GPT:', gpt_res)
+      
+      # gpt返回时模型或是key错误，需要加判断加提示窗口，写成一个advanced函数
+      # 可以增加查询等待时的提示模块
+      if (!is.null(gpt_res)) {
         gpt_data <- data.frame(source = "ChatGPT",
                                message = gpt_res,
                                stringsAsFactors = FALSE)
@@ -139,27 +143,17 @@ server <- function(input, output, session) {
       updateTextInput(session, "user_message", value = "")
     }
   })
-
-  chatBox <- function(data){
-    for(i in 1:nrow(data)){
-      tags$div(class = ifelse(data()[i, "source"] == "User",
-                              "alert alert-secondary",
-                              "alert alert-success"),
-               HTML(paste0("<b>", chat()[i, "source"], ":</b> ", chat_data()[i, "message"]))
-      )
-    }
-  }
-
+  
   # 输出列表
   output$chat_history <- renderUI({
     chatBox <- vector("list", nrow(chat_data())) # vectorization
-
+    
     for(i in seq_len(nrow(chat_data()))) {
       source <- chat_data()[i, "source"]
       message <- chat_data()[i, "message"]
       class_name <- ifelse(chat_data()[i, "source"] == "User",
-                           "question_in_list",
-                           "answer_in_list")
+                           "alert alert-secondar",
+                           "alert alert-success")
       chatBox[[i]] <- tags$div(class = class_name,
                                HTML(paste0("<b>", source, ":</b> ", message)))
     }
