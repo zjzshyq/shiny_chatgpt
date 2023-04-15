@@ -1,10 +1,13 @@
 library(shiny)
+library(shinyalert)
+
 library(httr)
 library(stringr)
 library(R6)
 
 # R6 style Class
-# 可以再增加private属性
+# 可以再把几个参数如api_key从public变为private属性，具体见R6的课件
+# 将这个类单独做成一个R包
 ChatGPT <- R6Class("ChatGPT",
                    public = list(
                      api_key = "",
@@ -37,6 +40,7 @@ ChatGPT <- R6Class("ChatGPT",
                              list(role = "user", content = self$prompt),
                              list(role = "system", content = self$sysprompt)
                            ),
+                           stop = '\n',
                            temperature = self$temperature,
                            max_tokens = self$max_length
                          )
@@ -45,6 +49,7 @@ ChatGPT <- R6Class("ChatGPT",
                      }
                    )
 )
+# 以上做成一个R包
 
 # to set the UI
 ui <- fluidPage(
@@ -56,7 +61,7 @@ ui <- fluidPage(
     sidebarPanel(
       h3("Welcome to the OpenAI Playground - ChatGPT Clone with Shiny!"),
       p("This application allows you to chat with an OpenAI GPT model and explore its capabilities. Simply use your own API keys with adding below."),
-      textInput("api_key", "API Key", "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"),
+      textInput("api_key", "API Key", "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"),
       tags$p("Find your own OpenAI API:",
              tags$a(href = "https://platform.openai.com/account/api-keys",
                     target="_blank", "https://platform.openai.com/account/api-keys")
@@ -114,7 +119,7 @@ ui <- fluidPage(
 )
 
 
-server <- function(input, output, session) {
+server <- function(input, output, session) { # advanced function
   chat_data <- reactiveVal(data.frame())
 
   observeEvent(input$send_message, {
@@ -129,11 +134,19 @@ server <- function(input, output, session) {
 
       # 获取gpt的返回
       gpt_res = gpt$call_gpt_api()
-      print('User:', gpt$prompt)
-      print('GPT:', gpt_res)
+      print(gpt$prompt)
+      print(gpt_res)
+
+      # 在这里可以增加一个tryCatch，当检查到gpt_res返回异常时，执行下面这段
+      if (length(gpt_res) == 0) {
+        # 彈出提示框
+        shinyalert(
+          title = "ERROR!",
+          text = "Please set right API Key or model.\nReload the page and try again.",
+          type = "error"
+        )
+      }
       
-      # gpt返回时模型或是key错误，需要加判断加提示窗口，写成一个advanced函数
-      # 可以增加查询等待时的提示模块
       if (!is.null(gpt_res)) {
         gpt_data <- data.frame(source = "ChatGPT",
                                message = gpt_res,
@@ -143,7 +156,7 @@ server <- function(input, output, session) {
       updateTextInput(session, "user_message", value = "")
     }
   })
-  
+
   # 输出列表
   output$chat_history <- renderUI({
     chatBox <- vector("list", nrow(chat_data())) # vectorization
