@@ -1,6 +1,6 @@
 dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 # 生成文件夹
-usethis::create_package(paste(dir,"/chatgpt", sep=''))
+# usethis::create_package(paste(dir,"/chatgpt", sep=''))
 
 devtools::build(paste(dir,"/chatgpt", sep=''),
                 path=paste(dir,"/pkg", sep=''))

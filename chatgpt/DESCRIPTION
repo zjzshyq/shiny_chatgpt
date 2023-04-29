@@ -1,0 +1,11 @@
+Package: chatgpt
+Title: ChatGPT-API-Class
+Description: ahahaha
+Version: 0.1.0
+Authors@R: c(person("Yiqing", 'Hu', email = "y.hu7@student.uw.edu.pl", role = c("aut", "cre")))
+Imports:
+    R6,
+    httr
+License: MIT
+Encoding: UTF-8
+RoxygenNote: 7.1.1

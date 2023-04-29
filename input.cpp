@@ -8,7 +8,7 @@ std::string cpp_sys_prompt() {
 
 // [[Rcpp::export]]
 std::string cpp_api_key(){
-    std::string message = "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";
+    std::string message = "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";
     return message;
 }
 
