@@ -2,11 +2,46 @@ library(shiny)
 library(shinyalert)
 library(stringr)
 library(Rcpp)
+library(httr)
 library('chatgpt')
 
 dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(dir)
 sourceCpp("input.cpp")
+
+
+call_gpt_api = function(gpt) {
+  api_key <- gpt$get_api_key()
+  model_name <- gpt$model_name
+  prompt <- gpt$prompt
+  sysprompt <- gpt$sysprompt
+  temperature <- gpt$temperature
+  max_length <- gpt$max_length
+  
+  tryCatch({
+    response <- httr::POST(
+      url = "https://api.openai.com/v1/chat/completions",
+      add_headers(Authorization = paste("Bearer", api_key)),
+      encode = "json",
+      body = list(
+        model = model_name,
+        messages = list(
+          list(role = "user", content = prompt),
+          list(role = "system", content = sysprompt)
+        ),
+        stop = '\n',
+        temperature = temperature,
+        max_tokens = max_length
+      )
+    )},
+    error = function(e) {
+      cat("Error:", e$message, "\n")
+      return(NULL)
+    }
+  )
+  return(str_trim(content(response)$choices[[1]]$message$content))
+}
+
 
 # to set the UI
 ui <- fluidPage(
@@ -18,7 +53,7 @@ ui <- fluidPage(
     sidebarPanel(
       h3("Welcome to the OpenAI Playground - ChatGPT Clone with Shiny!"),
       p("This application allows you to chat with an OpenAI GPT model and explore its capabilities. Simply use your own API keys with adding below."),
-      textInput("api_key", "API Key", cpp_api_key()),
+      textInput("api_key", "API Key", placeholder = cpp_api_key()),
       tags$p("Find your own OpenAI API:",
              tags$a(href = "https://platform.openai.com/account/api-keys",
                     target="_blank", "https://platform.openai.com/account/api-keys")
@@ -90,28 +125,23 @@ server <- function(input, output, session) { # advanced function
       chat_data(rbind(chat_data(), new_data))
       
       # 获取gpt的返回
-      gpt_res = gpt$call_gpt_api()
+      gpt_res = gpt$call_gpt_api() # call_gpt_api(gpt)
       print(gpt$prompt)
       print(gpt_res)
       
-      # 在这里可以增加一个tryCatch，当检查到gpt_res返回异常时，执行下面这段
-      if (length(gpt_res) == 0) {
-        # 彈出提示框
-        shinyalert(
-          title = "ERROR!",
-          text = "Please set right API Key or model.\nReload the page and try again.",
-          type = "error"
-        )
-      }else{
-        if (!is.null(gpt_res)) {
+      tryCatch({
           gpt_data <- data.frame(source = "ChatGPT",
                                  message = gpt_res,
                                  stringsAsFactors = FALSE)
           chat_data(rbind(chat_data(), gpt_data))
-        }else{
-          print('inner err')
+        }, error= function(e){
+          shinyalert(
+            title = "ERROR!",
+            text = "Please set right API Key or model.\nReload the page and try again.",
+            type = "error"
+          )
         }
-      }
+      )
       updateTextInput(session, "user_message", value = "")
     }
   })

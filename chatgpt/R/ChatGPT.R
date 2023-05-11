@@ -33,6 +33,7 @@ ChatGPT <- R6Class("ChatGPT",
 
                      # Call OpenAI API
                      call_gpt_api = function() {
+                     tryCatch({
                        response <- httr::POST(
                          url = "https://api.openai.com/v1/chat/completions",
                          add_headers(Authorization = paste("Bearer", private$api_key)),
@@ -49,6 +50,10 @@ ChatGPT <- R6Class("ChatGPT",
                          )
                        )
                        return(str_trim(content(response)$choices[[1]]$message$content))
+                      },error = function(e) {
+                          cat("Error:", e$message, "\n")
+                          return(NULL)
+                      }
                      }
                    )
 )

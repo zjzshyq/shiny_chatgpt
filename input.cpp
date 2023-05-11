@@ -8,7 +8,7 @@ std::string cpp_sys_prompt() {
 
 // [[Rcpp::export]]
 std::string cpp_api_key(){
-    std::string message = "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";
+    std::string message = "Please enter the API-Key";
     return message;
 }
 
@@ -17,4 +17,3 @@ std::string cpp_user_prompt(){
     std::string message = "Hello!";
     return message;
 }
-
