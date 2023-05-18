@@ -125,7 +125,7 @@ server <- function(input, output, session) { # advanced function
       chat_data(rbind(chat_data(), new_data))
       
       # 获取gpt的返回
-      gpt_res = gpt$call_gpt_api() # call_gpt_api(gpt)
+      gpt_res = call_gpt_api(gpt) # gpt$call_gpt_api()
       print(gpt$prompt)
       print(gpt_res)
       
@@ -140,6 +140,7 @@ server <- function(input, output, session) { # advanced function
             text = "Please set right API Key or model.\nReload the page and try again.",
             type = "error"
           )
+          print(e)
         }
       )
       updateTextInput(session, "user_message", value = "")
